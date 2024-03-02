@@ -340,7 +340,8 @@ const App = memo(() => {
 			minH="100vh"
 			minW="100vw"
 			h="100vh"
-			align="center"
+			display="flex"
+			justifyContent="center"
 			overflow="hidden"
 			m={0}
 			p={5}
