@@ -4,7 +4,26 @@ import {db} from "./components/connection.tsx";
 import {onValue, push, ref, set} from "firebase/database";
 import {Table, TableContainer, Tbody, Td, Th, Thead, Tr,} from '@chakra-ui/table'
 import {Box} from "@chakra-ui/layout";
-import {Button, Flex, FormControl, FormLabel, InputGroup, Textarea, useToast} from "@chakra-ui/react";
+import {
+	Button,
+	Flex,
+	FormControl,
+	FormLabel,
+	Grid,
+	InputGroup,
+	InputLeftAddon,
+	Modal,
+	ModalBody,
+	ModalCloseButton,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	ModalOverlay,
+	Textarea,
+	useDisclosure,
+	useToast
+} from "@chakra-ui/react";
+import {DeleteIcon, EditIcon, SearchIcon} from "@chakra-ui/icons";
 
 interface Question {
 	id: string;
@@ -14,28 +33,77 @@ interface Question {
 
 const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 	const [filter, setFilter] = useState('');
-
+	const [editQuestion, setEditQuestion] = useState<Question | null>(null);
 	const filteredData = data.filter(question => question.question.toLowerCase().startsWith(filter.toLowerCase()));
+	const {isOpen, onOpen, onClose} = useDisclosure()
+	const {isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose} = useDisclosure()
+	const toast = useToast();
+
+	const closeEditModal = () => {
+		setEditQuestion(null);
+		onClose();
+	}
+
+	const openEditModal = (question: Question) => {
+		setEditQuestion(question);
+		onOpen();
+	}
+
+	const editQuestionHandler = () => {
+		const questionRef = ref(db, editQuestion?.id);
+
+		set(questionRef, {
+			question: editQuestion?.question,
+			answer: editQuestion?.answer,
+		}).then(r => {
+			console.log('Updated', r);
+			toast({
+				title: "Question updated.",
+				description: "Your question has been updated.",
+				status: "success",
+				duration: 3000,
+				isClosable: true,
+			});
+			closeEditModal();
+		});
+	}
+
+	const deleteQuestionHandler = (question: Question) => {
+		//delete the question from the db
+		const questionRef = ref(db, question.id);
+
+		set(questionRef, null).then(r => {
+			console.log('Deleted', r);
+			toast({
+				title: "Question deleted.",
+				description: "Your question has been deleted.",
+				status: "success",
+				duration: 3000,
+				isClosable: true,
+			});
+		});
+	}
 
 	return (
-		<Flex w="100%" direction="column" bg="white" boxShadow="md" borderRadius="md" p={5} h="100%" color="black"
-		      gap={4}>
+		<Flex w="100%" direction="column" bg="white" boxShadow="md" borderRadius="md" p={5} h="100%" overflowY="auto" color="black" gap={4}>
 			<Flex w="100%" justify="center" align="center">
 				<InputGroup>
+					<InputLeftAddon pointerEvents="none" children={<SearchIcon color="black"/>}/>
 					<Textarea
-						rows={10}
+						rows={1}
 						placeholder="Search"
 						value={filter}
 						onChange={(e) => setFilter(e.target.value)}
 					/>
 				</InputGroup>
 			</Flex>
-			<TableContainer w="100%" h="100%" overflowY="auto">
+			<TableContainer w="100%" h="100%" fontSize="sm">
 				<Table variant="simple" colorScheme="black">
 					<Thead>
 						<Tr>
 							<Th fontSize="lg">Question</Th>
 							<Th fontSize="lg">Answer</Th>
+							<Th fontSize="lg">Actions</Th>
 						</Tr>
 					</Thead>
 					<Tbody>
@@ -47,11 +115,94 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 								<Td whiteSpace="pre-wrap">
 									{question.answer}
 								</Td>
+								<Td>
+									<Flex direction="row" gap={4}>
+										<EditIcon color="blue.500" boxSize={5} cursor="pointer" onClick={() => openEditModal(question)}/>
+										<DeleteIcon
+											color="red.500"
+											boxSize={5}
+											cursor="pointer"
+											onClick={onDeleteOpen}
+										/>
+									</Flex>
+								</Td>
 							</Tr>
 						))}
 					</Tbody>
 				</Table>
 			</TableContainer>
+			<Modal isOpen={isOpen} onClose={onClose} size="3xl">
+				<ModalOverlay/>
+				<ModalContent>
+					<ModalHeader>Edit Question</ModalHeader>
+					<ModalCloseButton/>
+					<ModalBody>
+						<FormControl isRequired>
+							<FormLabel>Question</FormLabel>
+							<Textarea
+								rows={10}
+								placeholder="Question" value={editQuestion?.question}
+								onChange={
+									(e) => setEditQuestion(editQuestion ?
+										{
+											...editQuestion,
+											question: e.target.value
+										} : null
+									)
+								}
+							/>
+						</FormControl>
+						<FormControl isRequired>
+							<FormLabel>Answer</FormLabel>
+							<Textarea
+								rows={10}
+								placeholder="Answer" value={editQuestion?.answer}
+								onChange={
+									(e) => setEditQuestion(editQuestion ?
+										{
+											...editQuestion,
+											answer: e.target.value
+										} : null
+									)
+								}
+							/>
+						</FormControl>
+					</ModalBody>
+					<ModalFooter>
+						<Button variant="ghost" mr={3} onClick={closeEditModal}>
+							Close
+						</Button>
+						<Button
+							colorScheme="blue"
+							isDisabled={editQuestion?.answer === '' || editQuestion?.question === ''}
+							onClick={editQuestionHandler}
+						>
+							Save
+						</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
+			<Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
+				<ModalOverlay/>
+				<ModalContent>
+					<ModalHeader>Delete Question</ModalHeader>
+					<ModalCloseButton/>
+					<ModalBody>
+						Are you sure you want to delete this question?
+					</ModalBody>
+					<ModalFooter>
+						<Button variant="ghost" mr={3} onClick={onDeleteClose}>
+							Close
+						</Button>
+						<Button colorScheme="red" onClick={() => {
+							deleteQuestionHandler(editQuestion as Question);
+							onDeleteClose();
+						}}>
+							Delete
+						</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
 		</Flex>
 	)
 });
@@ -120,49 +271,75 @@ const App = memo(() => {
 		});
 	}
 
+	const AddQuestionAnswer = () => {
+		return (
+			<Flex w="100%" direction="row" bg="white" borderRadius="md" boxShadow="md" color="black" h="100%" justify="center"
+			      align="center">
+				<Flex direction="row" gap={4} w="90%" p={5}>
+					<FormControl isRequired>
+						<FormLabel>Question</FormLabel>
+						<Textarea
+							placeholder="Question"
+							rows={4}
+							onChange={(e) => setQuestion(e.target.value)}
+						/>
+					</FormControl>
+					<FormControl isRequired>
+						<FormLabel>Answer</FormLabel>
+						<Textarea
+							placeholder="Answer"
+							rows={4}
+							onChange={(e) => setAnswer(e.target.value)}
+						/>
+					</FormControl>
+				</Flex>
+				<Flex w="10%" justify="center" align="center">
+					<Button
+						variant="ghost"
+						isDisabled={question === '' || answer === ''}
+						onClick={addQuestion}
+					>Save</Button>
+				</Flex>
+			</Flex>
+		)
+	}
+
 	return (
 		<Flex
 			bg="gray.200"
 			minH="100vh"
 			minW="100vw"
-			overflow="hidden"
-			direction="column"
 			justify="center"
-			align="center"  // Center the content horizontally
+			align="center"
+			direction="column"
+			overflow="hidden"
 			m={0}
 			p={5}
 		>
-			<Flex
-				w="90%"
+			{/*<Flex*/}
+			{/*	w="90%"*/}
+			{/*	h="100%"*/}
+			{/*	direction="column"*/}
+			{/*	bg="gray.200"*/}
+			{/*	overflowY="auto"*/}
+			{/*	gap={4}*/}
+			{/*>*/}
+			{/*	<AddQuestionAnswer/>*/}
+			{/*	{*/}
+			{/*		data ? <QuestionsTable data={data}/> : <Box>No data</Box>*/}
+			{/*	}*/}
+			{/*</Flex>*/}
+			<Grid
+				templateRows="1fr 4fr"
+				w="95%"
 				h="100%"
-				direction="column"
-				bg="gray.200"
-				overflowY="auto"
-				gap={4}
+				gap={5}
 			>
-				<Flex w="100%" direction="row" bg="white" borderRadius="md" boxShadow="md" color="black">
-					<Flex direction="row" gap={4} w="80%" p={5}>
-						<FormControl isRequired>
-							<FormLabel>Question</FormLabel>
-							<Textarea placeholder="Question" onChange={(e) => setQuestion(e.target.value)}/>
-						</FormControl>
-						<FormControl isRequired>
-							<FormLabel>Answer</FormLabel>
-							<Textarea placeholder="Answer" onChange={(e) => setAnswer(e.target.value)}/>
-						</FormControl>
-					</Flex>
-					<Flex w="20%" justify="center" align="center">
-						<Button
-							variant="ghost"
-							isDisabled={question === '' || answer === ''}
-							onClick={addQuestion}
-						>Save</Button>
-					</Flex>
-				</Flex>
+				<AddQuestionAnswer/>
 				{
 					data ? <QuestionsTable data={data}/> : <Box>No data</Box>
 				}
-			</Flex>
+			</Grid>
 		</Flex>
 	)
 });
