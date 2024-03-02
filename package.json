@@ -1,9 +1,8 @@
 {
   "name": "exam",
-  "private": false,
+  "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://xytrix1103.github.io/mpu_exam/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
