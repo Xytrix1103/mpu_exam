@@ -34,6 +34,7 @@ interface Question {
 const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 	const [filter, setFilter] = useState('');
 	const [editQuestion, setEditQuestion] = useState<Question | null>(null);
+	const [deleteQuestion, setDeleteQuestion] = useState<Question | null>(null);
 	const filteredData = data.filter(question => question.question.toLowerCase().startsWith(filter.toLowerCase()));
 	const {isOpen, onOpen, onClose} = useDisclosure()
 	const {isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose} = useDisclosure()
@@ -47,6 +48,16 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 	const openEditModal = (question: Question) => {
 		setEditQuestion(question);
 		onOpen();
+	}
+
+	const closeDeleteModal = () => {
+		setDeleteQuestion(null);
+		onDeleteClose();
+	}
+
+	const openDeleteModal = (question: Question) => {
+		setDeleteQuestion(question);
+		onDeleteOpen();
 	}
 
 	const editQuestionHandler = () => {
@@ -68,9 +79,8 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 		});
 	}
 
-	const deleteQuestionHandler = (question: Question) => {
-		//delete the question from the db
-		const questionRef = ref(db, question.id);
+	const deleteQuestionHandler = () => {
+		const questionRef = ref(db, deleteQuestion?.id);
 
 		set(questionRef, null).then(r => {
 			console.log('Deleted', r);
@@ -81,6 +91,7 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 				duration: 3000,
 				isClosable: true,
 			});
+			closeDeleteModal();
 		});
 	}
 
@@ -122,7 +133,7 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 											color="red.500"
 											boxSize={5}
 											cursor="pointer"
-											onClick={onDeleteOpen}
+											onClick={() => openDeleteModal(question)}
 										/>
 									</Flex>
 								</Td>
@@ -131,7 +142,7 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 					</Tbody>
 				</Table>
 			</TableContainer>
-			<Modal isOpen={isOpen} onClose={onClose} size="3xl">
+			<Modal isOpen={isOpen} onClose={closeEditModal} size="3xl">
 				<ModalOverlay/>
 				<ModalContent>
 					<ModalHeader>Edit Question</ModalHeader>
@@ -182,7 +193,7 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 					</ModalFooter>
 				</ModalContent>
 			</Modal>
-			<Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
+			<Modal isOpen={isDeleteOpen} onClose={closeDeleteModal}>
 				<ModalOverlay/>
 				<ModalContent>
 					<ModalHeader>Delete Question</ModalHeader>
@@ -191,13 +202,10 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 						Are you sure you want to delete this question?
 					</ModalBody>
 					<ModalFooter>
-						<Button variant="ghost" mr={3} onClick={onDeleteClose}>
+						<Button variant="ghost" mr={3} onClick={closeDeleteModal}>
 							Close
 						</Button>
-						<Button colorScheme="red" onClick={() => {
-							deleteQuestionHandler(editQuestion as Question);
-							onDeleteClose();
-						}}>
+						<Button colorScheme="red" onClick={deleteQuestionHandler}>
 							Delete
 						</Button>
 					</ModalFooter>
