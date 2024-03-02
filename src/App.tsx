@@ -96,7 +96,7 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 	}
 
 	return (
-		<Flex w="100%" direction="column" bg="white" boxShadow="md" borderRadius="md" p={5} h="100%" overflowY="auto" color="black" gap={4}>
+		<Flex w="100%" direction="column" bg="white" boxShadow="md" borderRadius="md" p={5} color="black" gap={4}>
 			<Flex w="100%" justify="center" align="center">
 				<InputGroup>
 					<InputLeftAddon pointerEvents="none" children={<SearchIcon color="black"/>}/>
@@ -215,6 +215,51 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 	)
 });
 
+const AddQuestionAnswer = memo(({question, answer, setQuestion, setAnswer, addQuestion}: {
+	question: string,
+	answer: string,
+	setQuestion: (question: string) => void,
+	setAnswer: (answer: string) => void,
+	addQuestion: () => void
+}): ReactNode => {
+	return (
+		<Flex w="100%" direction="row" bg="white" borderRadius="md" boxShadow="md" color="black" h="100%" justify="center"
+		      align="center">
+			<Flex direction="row" gap={4} w="90%" p={5}>
+				<FormControl isRequired>
+					<FormLabel>Question</FormLabel>
+					<Textarea
+						placeholder="Question"
+						rows={4}
+						value={question}
+						onChange={(e) => {
+							setQuestion(e.target.value)
+						}}
+					/>
+				</FormControl>
+				<FormControl isRequired>
+					<FormLabel>Answer</FormLabel>
+					<Textarea
+						placeholder="Answer"
+						rows={4}
+						value={answer}
+						onChange={(e) => {
+							setAnswer(e.target.value)
+						}}
+					/>
+				</FormControl>
+			</Flex>
+			<Flex w="10%" justify="center" align="center">
+				<Button
+					variant="ghost"
+					isDisabled={question === '' || answer === ''}
+					onClick={addQuestion}
+				>Save</Button>
+			</Flex>
+		</Flex>
+	)
+});
+
 const App = memo(() => {
 	const [data, setData] = useState(null as Question[] | null);
 
@@ -279,38 +324,10 @@ const App = memo(() => {
 		});
 	}
 
-	const AddQuestionAnswer = () => {
-		return (
-			<Flex w="100%" direction="row" bg="white" borderRadius="md" boxShadow="md" color="black" h="100%" justify="center"
-			      align="center">
-				<Flex direction="row" gap={4} w="90%" p={5}>
-					<FormControl isRequired>
-						<FormLabel>Question</FormLabel>
-						<Textarea
-							placeholder="Question"
-							rows={4}
-							onChange={(e) => setQuestion(e.target.value)}
-						/>
-					</FormControl>
-					<FormControl isRequired>
-						<FormLabel>Answer</FormLabel>
-						<Textarea
-							placeholder="Answer"
-							rows={4}
-							onChange={(e) => setAnswer(e.target.value)}
-						/>
-					</FormControl>
-				</Flex>
-				<Flex w="10%" justify="center" align="center">
-					<Button
-						variant="ghost"
-						isDisabled={question === '' || answer === ''}
-						onClick={addQuestion}
-					>Save</Button>
-				</Flex>
-			</Flex>
-		)
-	}
+	useEffect(() => {
+		console.log('question', question);
+		console.log('answer', answer);
+	}, [question, answer]);
 
 	return (
 		<Flex
@@ -324,26 +341,19 @@ const App = memo(() => {
 			m={0}
 			p={5}
 		>
-			{/*<Flex*/}
-			{/*	w="90%"*/}
-			{/*	h="100%"*/}
-			{/*	direction="column"*/}
-			{/*	bg="gray.200"*/}
-			{/*	overflowY="auto"*/}
-			{/*	gap={4}*/}
-			{/*>*/}
-			{/*	<AddQuestionAnswer/>*/}
-			{/*	{*/}
-			{/*		data ? <QuestionsTable data={data}/> : <Box>No data</Box>*/}
-			{/*	}*/}
-			{/*</Flex>*/}
 			<Grid
 				templateRows="1fr 4fr"
 				w="95%"
 				h="100%"
 				gap={5}
 			>
-				<AddQuestionAnswer/>
+				<AddQuestionAnswer
+					question={question}
+					answer={answer}
+					setQuestion={setQuestion}
+					setAnswer={setAnswer}
+					addQuestion={addQuestion}
+				/>
 				{
 					data ? <QuestionsTable data={data}/> : <Box>No data</Box>
 				}
