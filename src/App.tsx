@@ -96,52 +96,57 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 	}
 
 	return (
-		<Flex w="100%" direction="column" bg="white" boxShadow="md" borderRadius="md" p={5} color="black" gap={4}>
-			<Flex w="100%" justify="center" align="center">
-				<InputGroup>
-					<InputLeftAddon pointerEvents="none" children={<SearchIcon color="black"/>}/>
-					<Textarea
-						rows={1}
-						placeholder="Search"
-						value={filter}
-						onChange={(e) => setFilter(e.target.value)}
-					/>
-				</InputGroup>
-			</Flex>
-			<TableContainer w="100%" h="100%" fontSize="sm">
-				<Table variant="simple" colorScheme="black">
-					<Thead>
-						<Tr>
-							<Th fontSize="lg">Question</Th>
-							<Th fontSize="lg">Answer</Th>
-							<Th fontSize="lg">Actions</Th>
-						</Tr>
-					</Thead>
-					<Tbody>
-						{filteredData.map((question) => (
-							<Tr key={question.id}>
-								<Td whiteSpace="pre-wrap">
-									{question.question}
-								</Td>
-								<Td whiteSpace="pre-wrap">
-									{question.answer}
-								</Td>
-								<Td>
-									<Flex direction="row" gap={4}>
-										<EditIcon color="blue.500" boxSize={5} cursor="pointer" onClick={() => openEditModal(question)}/>
-										<DeleteIcon
-											color="red.500"
-											boxSize={5}
-											cursor="pointer"
-											onClick={() => openDeleteModal(question)}
-										/>
-									</Flex>
-								</Td>
+		<Box w="100%" bg="white" boxShadow="md" borderRadius="md" h="100%" p={5} color="black">
+			<Box w="100%" h="10%">
+				<Flex w="100%" justify="center" align="center">
+					<InputGroup>
+						<InputLeftAddon pointerEvents="none" children={<SearchIcon color="black"/>}/>
+						<Textarea
+							rows={1}
+							placeholder="Search"
+							value={filter}
+							onChange={(e) => setFilter(e.target.value)}
+						/>
+					</InputGroup>
+				</Flex>
+			</Box>
+			<Box w="100%" h="90%" overflowY="auto">
+				<TableContainer w="100%" fontSize="sm">
+					<Table variant="simple" colorScheme="black">
+						<Thead>
+							<Tr>
+								<Th fontSize="lg">Question</Th>
+								<Th fontSize="lg">Answer</Th>
+								<Th fontSize="lg">Actions</Th>
 							</Tr>
-						))}
-					</Tbody>
-				</Table>
-			</TableContainer>
+						</Thead>
+						<Tbody>
+							{filteredData.map((question) => (
+								<Tr key={question.id}>
+									<Td whiteSpace="pre-wrap">
+										{question.question}
+									</Td>
+									<Td whiteSpace="pre-wrap">
+										{question.answer}
+									</Td>
+									<Td>
+										<Flex direction="row" gap={4}>
+											<EditIcon color="blue.500" boxSize={5} cursor="pointer"
+											          onClick={() => openEditModal(question)}/>
+											<DeleteIcon
+												color="red.500"
+												boxSize={5}
+												cursor="pointer"
+												onClick={() => openDeleteModal(question)}
+											/>
+										</Flex>
+									</Td>
+								</Tr>
+							))}
+						</Tbody>
+					</Table>
+				</TableContainer>
+			</Box>
 			<Modal isOpen={isOpen} onClose={closeEditModal} size="3xl">
 				<ModalOverlay/>
 				<ModalContent>
@@ -211,7 +216,7 @@ const QuestionsTable = memo(({data}: { data: Question[] }): ReactNode => {
 					</ModalFooter>
 				</ModalContent>
 			</Modal>
-		</Flex>
+		</Box>
 	)
 });
 
@@ -223,7 +228,7 @@ const AddQuestionAnswer = memo(({question, answer, setQuestion, setAnswer, addQu
 	addQuestion: () => void
 }): ReactNode => {
 	return (
-		<Flex w="100%" direction="row" bg="white" borderRadius="md" boxShadow="md" color="black" h="100%" justify="center"
+		<Flex w="100%" direction="row" bg="white" borderRadius="md" boxShadow="md" color="black" justify="center"
 		      align="center">
 			<Flex direction="row" gap={4} w="90%" p={5}>
 				<FormControl isRequired>
@@ -330,21 +335,20 @@ const App = memo(() => {
 	}, [question, answer]);
 
 	return (
-		<Flex
+		<Box
 			bg="gray.200"
 			minH="100vh"
 			minW="100vw"
-			justify="center"
+			h="100vh"
 			align="center"
-			direction="column"
 			overflow="hidden"
 			m={0}
 			p={5}
 		>
 			<Grid
-				templateRows="1fr 4fr"
+				templateRows="20% 80%"
 				w="95%"
-				h="100%"
+				h="95%"
 				gap={5}
 			>
 				<AddQuestionAnswer
@@ -358,7 +362,7 @@ const App = memo(() => {
 					data ? <QuestionsTable data={data}/> : <Box>No data</Box>
 				}
 			</Grid>
-		</Flex>
+		</Box>
 	)
 });
 
